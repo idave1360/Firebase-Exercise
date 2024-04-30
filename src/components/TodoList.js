@@ -96,7 +96,7 @@ const TodoList = () => {
     const todoDoc = doc(todoCollection, id);
     deleteDoc(todoDoc);
 
-    // 해당 id를 가진 할 일을 제외한 나머지 목록을 새로운 상태로 저장합니다.
+    // 해당 id를 가진 할 일 제외한 나머지 목록을 새로운 상태로 저장합니다.
     setTodos(
       todos.filter((todo) => {
         return todo.id !== id;
