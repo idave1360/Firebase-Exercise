@@ -62,15 +62,18 @@ const TodoList = () => {
     // }
     // ...todos => {id: 1, text: "할일1", completed: false}, {id: 2, text: "할일2", completed: false}}, ..
 
+    // 날짜가 선택되지 않았을 경우 현재 날짜를 사용합니다.
+    const currentDate = date || new Date().toISOString().split('T')[0];
+
     // Firesotre 에 추가한 일을 저장합니다.
     const docRef = await addDoc(todoCollection, {
       text: input,
-      date: date,
+      date: currentDate,
       completed: false,
     });
 
     // id 값을 Firestore 에 저장한 값으로 지정합니다.
-    setTodos([...todos, { id: docRef.id, text: input, date: date, completed: false }]);
+    setTodos([...todos, { id: docRef.id, text: input, date: currentDate, completed: false }]);
     setInput("");
     setDate("");
   };
