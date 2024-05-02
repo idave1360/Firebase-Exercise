@@ -28,6 +28,8 @@ const TodoList = () => {
   const [input, setInput] = useState("");
   // 상태를 관리하는 useState 훅을 사용하여 날짜를 초기화합니다.
   const [date, setDate] = useState("");
+  // 라벨 상태를 추가합니다.
+  const [label, setLabel] = useState("분류되지 않음");
 
   useEffect(() => {
     getTodos();
@@ -44,23 +46,31 @@ const TodoList = () => {
     // 가져온 할 일 목록을 newTodos 배열에 담습니다.
     results.docs.forEach((doc) => {
       // id 값을 Firebase 에 저장한 값으로 지정하고, 나머지 데이터를 newtodos 배열에 담습니다.
-      newTodos.push({ id: doc.id, ...doc.data() });
+      // label 속성이 없는 경우 기본값을 설정합니다.
+      newTodos.push({ id: doc.id, label: "분류되지 않음", ...doc.data() });
     });
 
     setTodos(newTodos);
+  };
+
+  const changeLabel = (id, newLabel) => {
+    setTodos(
+      todos.map((todo) => {
+        if (todo.id === id) {
+          const todoDoc = doc(todoCollection, id)
+          updateDoc(todoDoc, { label: newLabel });
+          return { ...todo, label: newLabel };
+        } else {
+          return todo;
+        }
+      })
+    )
   };
 
   // addTodo 함수는 입력값을 이용하여 새로운 할 일을 목록에 추가하는 함수입니다.
   const addTodo = async() => {
     // 입력값이 비어있는 경우 함수를 종료합니다.
     if (input.trim() === "") return;
-    // 기존 할 일 목록에 새로운 할 일을 추가하고, 입력값을 초기화합니다.
-    // {
-    //   id: 할일의 고유 id,
-    //   text: 할일의 내용,
-    //   completed: 완료 여부,
-    // }
-    // ...todos => {id: 1, text: "할일1", completed: false}, {id: 2, text: "할일2", completed: false}}, ..
 
     // 날짜가 선택되지 않았을 경우 현재 날짜를 사용합니다.
     const currentDate = date || new Date().toISOString().split('T')[0];
@@ -70,10 +80,11 @@ const TodoList = () => {
       text: input,
       date: currentDate,
       completed: false,
+      label: label,
     });
 
     // id 값을 Firestore 에 저장한 값으로 지정합니다.
-    setTodos([...todos, { id: docRef.id, text: input, date: currentDate, completed: false }]);
+    setTodos([...todos, { id: docRef.id, text: input, date: currentDate, completed: false, label: label }]);
     setInput("");
     setDate("");
   };
@@ -109,10 +120,6 @@ const TodoList = () => {
     )
   };
 
-  const sortTodos = () => {
-    setTodos([...todos].sort((a, b) => new Date(a.date) - new Date(b.date)));
-  };
-
   const deleteAllTodos = async () => {
     // Firestore의 모든 할 일을 삭제합니다.
     const q = query(todoCollection);
@@ -132,16 +139,23 @@ const TodoList = () => {
       <h1 className="text-center text-2xl font-bold">Todo List</h1>
       <Input
         type="text"
-        className="w-full p-1 mb-2 text-black border-2 border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        className="w-full p-1 mb-2 text-black border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         placeholder="할 일을 입력하세요"
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
       <Input
         type="date"
-        className="w-full p-1 mb-2 text-black border-2 border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        className="w-full p-1 mb-2 text-black border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         value={date}
         onChange={(e) => setDate(e.target.value)}
+      />
+      <Input
+        type="text"
+        className="w-full p-1 mb-2 text-black border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        placeholder="라벨을 입력하세요"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
       />
       <Button
         className="w-full p-1 mb-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:translate-y-1 transform transition mr-2"
@@ -150,24 +164,19 @@ const TodoList = () => {
         Add Todo
       </Button>
       <Button
-        className="w-full p-1 mb-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:translate-y-1 transform transition mr-2"
-        onClick={sortTodos}
-      >
-        Sort by Date
-      </Button>
-      <Button
         className="w-full p-1 mb-2 bg-red-500 text-white rounded hover:bg-red-600 active:translate-y-1 transform transition mr-2"
         onClick={deleteAllTodos}
       >
         Delete All Todos
       </Button>
       <ul className="list-none p-0">
-        {todos.map((todo) => (
+       {todos.sort((a, b) => a.label.localeCompare(b.label) || new Date(a.date) - new Date(b.date)).map((todo) => (
           <TodoItem
             key={todo.id}
             todo={todo}
             onToggle={() => toggleTodo(todo.id)}
             onDelete={() => deleteTodo(todo.id)}
+            onChangeLabel={(newLabel) => changeLabel(todo.id, newLabel)} // 라벨 변경 함수 추가
           />
         ))}
       </ul>
