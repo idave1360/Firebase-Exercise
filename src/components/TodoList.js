@@ -106,7 +106,10 @@ const TodoList = () => {
     )
   };
 
-  // deleteAllTodos 함수는 모든 할 일을 목록에서 삭제하는 함수입니다.
+  const sortTodos = () => {
+    setTodos([...todos].sort((a, b) => new Date(a.date) - new Date(b.date)));
+  };
+
   const deleteAllTodos = async () => {
     // Firestore의 모든 할 일을 삭제합니다.
     const q = query(todoCollection);
@@ -118,10 +121,6 @@ const TodoList = () => {
 
     // 상태를 빈 배열로 설정합니다.
     setTodos([]);
-  };
-
-  const sortTodos = () => {
-    setTodos([...todos].sort((a, b) => new Date(a.date) - new Date(b.date)));
   };
 
   // 컴포넌트를 렌더링합니다.
@@ -148,16 +147,16 @@ const TodoList = () => {
         Add Todo
       </Button>
       <Button
+        className="w-full p-1 mb-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:translate-y-1 transform transition mr-2"
+        onClick={sortTodos}
+      >
+        Sort by Date
+      </Button>
+      <Button
         className="w-full p-1 mb-2 bg-red-500 text-white rounded hover:bg-red-600 active:translate-y-1 transform transition mr-2"
         onClick={deleteAllTodos}
       >
         Delete All Todos
-      </Button>
-      <Button
-        className="w-full p-1 mb-2 bg-green-500 text-white rounded hover:bg-green-600 active:translate-y-1 transform transition mr-2"
-        onClick={sortTodos}
-      >
-        Sort by Date
       </Button>
       <ul className="list-none p-0">
         {todos.map((todo) => (
@@ -175,6 +174,9 @@ const TodoList = () => {
         <p className="text-lg mt-2">할 일이 없습니다.</p>
       </div>
       
+      )}
+      {todos.length > 0 && (
+        <p className="text-center text-sm">완료되지 않은 할 일: {todos.filter(todo => !todo.completed).length}</p>
       )}
     </div>
   );
