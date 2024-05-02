@@ -170,14 +170,28 @@ const TodoList = () => {
         Delete All Todos
       </Button>
       <ul className="list-none p-0">
-       {todos.sort((a, b) => a.label.localeCompare(b.label) || new Date(a.date) - new Date(b.date)).map((todo) => (
-          <TodoItem
-            key={todo.id}
-            todo={todo}
-            onToggle={() => toggleTodo(todo.id)}
-            onDelete={() => deleteTodo(todo.id)}
-            onChangeLabel={(newLabel) => changeLabel(todo.id, newLabel)} // 라벨 변경 함수 추가
-          />
+       {Object.entries(
+          todos.reduce((groups, todo) => {
+            const group = todo.label || "분류되지 않음";
+            if (!groups[group]) {
+              groups[group] = [];
+            }
+            groups[group].push(todo);
+            return groups;
+          }, {})
+        ).sort(([labelA], [labelB]) => labelA.localeCompare(labelB)).map(([label, todosInGroup]) => (
+         <React.Fragment key={label}>
+            <li className="text-lg font-bold">{label}</li>
+            {todosInGroup.sort((a, b) => new Date(a.date) - new Date(b.date)).map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggle={() => toggleTodo(todo.id)}
+                onDelete={() => deleteTodo(todo.id)}
+                onChangeLabel={(newLabel) => changeLabel(todo.id, newLabel)} // 라벨 변경 함수 추가
+              />
+            ))}
+          </React.Fragment>
         ))}
       </ul>
       {todos.length === 0 && (
