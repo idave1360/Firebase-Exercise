@@ -26,6 +26,8 @@ const TodoList = () => {
   // 상태를 관리하는 useState 훅을 사용하여 할 일 목록과 입력값을 초기화합니다.
   const [todos, setTodos] = useState([]);
   const [input, setInput] = useState("");
+  // 상태를 관리하는 useState 훅을 사용하여 날짜를 초기화합니다.
+  const [date, setDate] = useState("");
 
   useEffect(() => {
     getTodos();
@@ -63,12 +65,14 @@ const TodoList = () => {
     // Firesotre 에 추가한 일을 저장합니다.
     const docRef = await addDoc(todoCollection, {
       text: input,
+      date: date,
       completed: false,
     });
 
     // id 값을 Firestore 에 저장한 값으로 지정합니다.
-    setTodos([...todos, { id: docRef.id, text: input, completed: false }]);
+    setTodos([...todos, { id: docRef.id, text: input, date: date, completed: false }]);
     setInput("");
+    setDate("");
   };
 
   // toggleTodo 함수는 체크박스를 눌러 할 일의 완료 상태를 변경하는 함수입니다.
@@ -116,15 +120,26 @@ const TodoList = () => {
     setTodos([]);
   };
 
+  const sortTodos = () => {
+    setTodos([...todos].sort((a, b) => new Date(a.date) - new Date(b.date)));
+  };
+
   // 컴포넌트를 렌더링합니다.
   return (
     <div className="mx-auto max-w-sm p-5 bg-white rounded-lg shadow">
       <h1 className="text-center text-2xl font-bold">Todo List</h1>
       <Input
+        type="text"
         className="w-full p-1 mb-2 text-black border-2 border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        placeholder="할 일을 입력하세요"
         value={input}
         onChange={(e) => setInput(e.target.value)}
-        placeholder="Add new todo"
+      />
+      <Input
+        type="date"
+        className="w-full p-1 mb-2 text-black border-2 border-gray-200 rounded shadow focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        value={date}
+        onChange={(e) => setDate(e.target.value)}
       />
       <Button
         className="w-full p-1 mb-2 bg-blue-500 text-white rounded hover:bg-blue-600 active:translate-y-1 transform transition mr-2"
@@ -137,6 +152,12 @@ const TodoList = () => {
         onClick={deleteAllTodos}
       >
         Delete All Todos
+      </Button>
+      <Button
+        className="w-full p-1 mb-2 bg-green-500 text-white rounded hover:bg-green-600 active:translate-y-1 transform transition mr-2"
+        onClick={sortTodos}
+      >
+        Sort by Date
       </Button>
       <ul className="list-none p-0">
         {todos.map((todo) => (
